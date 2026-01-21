@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_resto/pages/edit_menu_page.dart';
 import 'package:http/http.dart' as http;
 
 class DashboardPage extends StatefulWidget {
@@ -392,8 +393,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
                   onPressed: () {
-                    // Aksi Edit
-                    print("Edit ${item['nama']}");
+                    
                   },
                 ),
                 IconButton(

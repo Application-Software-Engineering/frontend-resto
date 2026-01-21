@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/cart_page.dart';
 import 'package:frontend_resto/pages/dashboard.dart';
 import 'package:frontend_resto/pages/history_page.dart';
+import 'package:frontend_resto/pages/tambah_menu_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -15,7 +16,7 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = [
     const DashboardPage(),
-    const Center(child: Text("Halaman Tambah Menu")), // Index 1
+    const TambahMenuPage(),
     const HistoryPage(),                              // Index 2
   ];
 
