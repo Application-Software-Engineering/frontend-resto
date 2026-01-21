@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/edit_menu_page.dart';
-import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -40,7 +40,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                   ),
-
                   Row(
                     children: [
                       Container(
@@ -62,23 +61,21 @@ class _DashboardPageState extends State<DashboardPage> {
                         children: [
                           Text(
                             item['nama'],
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Poppins',
                             ),
                           ),
                           Text(
                             item['harga'],
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 16,
                               color: Colors.grey,
-                              fontFamily: 'Poppins',
                             ),
                           ),
                           Text(
                             "Sisa Stok: ${item['stok']}",
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 12,
                               color: Colors.green,
                             ),
@@ -88,15 +85,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     ],
                   ),
                   const SizedBox(height: 25),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         "Jumlah Pesanan",
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Poppins',
                         ),
                       ),
                       Container(
@@ -116,7 +111,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                             Text(
                               "$quantity",
-                              style: const TextStyle(
+                              style: GoogleFonts.poppins(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -133,8 +128,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     ],
                   ),
                   const SizedBox(height: 25),
-
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -147,24 +140,22 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       onPressed: () {
                         Navigator.pop(context);
-
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
                               "$quantity ${item['nama']} berhasil ditambahkan!",
-                              style: const TextStyle(fontFamily: 'Poppins'),
+                              style: GoogleFonts.poppins(),
                             ),
                             backgroundColor: Colors.green,
                             duration: const Duration(seconds: 1),
                           ),
                         );
                       },
-                      child: const Text(
+                      child: Text(
                         "Tambah ke Keranjang",
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Poppins',
                         ),
                       ),
                     ),
@@ -227,10 +218,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     height: 50,
                     child: Text(
                       'Selamat Datang! User',
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins',
                       ),
                     ),
                   ),
@@ -242,8 +232,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: PageView.builder(
                       controller: controller,
                       itemBuilder: (context, index) {
-                        final int realIndex = index % bannerCount;
-            
                         return Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
@@ -252,8 +240,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(15),
-            
-                            child: Center(
+                            child: const Center(
                               child: Icon(
                                 Icons.image,
                                 size: 50,
@@ -271,12 +258,11 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'List Menu',
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Poppins',
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -311,105 +297,108 @@ class _DashboardPageState extends State<DashboardPage> {
       onTap: () {
         _showAddToCartSheet(context, item);
       },
-    child: Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(  
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    color: Colors.green ,
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.food_bank, size: 40, color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.black26, blurRadius: 5, offset: Offset(0, 2)),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      "${item['nama']}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins',
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        color: Colors.green,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                      child: const Center(
+                        child:
+                            Icon(Icons.food_bank, size: 40, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "${item['nama']}",
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    "Stok: ${item['stok']}",
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "${item['harga']}",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
                     ),
                   ),
                 ],
               ),
-              Text(
-                "Stok: ${item['stok']}",
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey,
-                  fontFamily: 'Poppins',
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white30,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(15),
+                    bottomLeft: Radius.circular(15),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditMenuPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_outlined),
+                      onPressed: () {
+                        print("Hapus ${item['nama']}");
+                      },
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                "${item['harga']}",
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.amber,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-            ],
-          ),
+            )
+          ],
         ),
-        Positioned(
-          top: 0,
-          right: 0,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white30,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-              ),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () {
-                    
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline_outlined),
-                  onPressed: () {
-                    // Aksi Hapus
-                    print("Hapus ${item['nama']}");
-                  },
-                ),
-              ],
-            ),
-          )
-        )
-        ],
       ),
-    ),
-   );
+    );
   }
 }
