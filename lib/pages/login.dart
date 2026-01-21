@@ -183,7 +183,7 @@ class _LoginPageState extends State<LoginPage> {
                                   });
                                 }, 
                                 icon: Icon(
-                                    _showpassword ? Icons.remove_red_eye : Icons. visibility_off,
+                                    _showpassword ? Icons.remove_red_eye : Icons.visibility_off,
                                   ),
                                 ),
                               labelText: 'Password',

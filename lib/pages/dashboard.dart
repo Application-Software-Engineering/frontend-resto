@@ -388,7 +388,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const EditMenuPage(),
+                            builder: (context) => EditMenuPage(id: item['id'], nama: item['name'], price: item['harga'], stock: item['stock'], imageUrl: ''),
                           ),
                         );
                       },
