@@ -17,7 +17,7 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  bool _isLoading = true;
+  bool _isLoading = true; 
   List<Order> _orders = [];
 
   @override
