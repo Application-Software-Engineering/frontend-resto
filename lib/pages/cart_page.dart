@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/order_service.dart';
 
 class Menu {
   final String id;
@@ -28,16 +29,7 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   bool _isLoading = false;
   
-  final List<CartItem> _cartItems = [
-    CartItem(
-      menu: Menu(id: '1', name: 'Nasi Goreng Spesial', price: 25000, image: 'https://via.placeholder.com/150'),
-      quantity: 1,
-    ),
-    CartItem(
-      menu: Menu(id: '2', name: 'Es Teh Manis', price: 5000, image: null),
-      quantity: 2,
-    ),
-  ];
+  final List<CartItem> _cartItems = [];
 
   int get _totalPrice {
     return _cartItems.fold(0, (sum, item) => sum + item.subtotal);
@@ -328,20 +320,42 @@ class _CartPageState extends State<CartPage> {
         _isLoading = true;
       });
 
-      await Future.delayed(const Duration(seconds: 2));
+      // Convert cart items to backend format
+      final orderItems = _cartItems.map((cartItem) {
+        return {
+          'menu_id': int.parse(cartItem.menu.id),
+          'qty': cartItem.quantity,
+        };
+      }).toList();
+
+      // Send order to backend
+      final orderService = OrderService();
+      final result = await orderService.createOrder(orderItems);
 
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _cartItems.clear();
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pesanan berhasil dibuat!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (result['success'] == true) {
+          setState(() {
+            _cartItems.clear();
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Pesanan berhasil dibuat! Order ID: ${result['order_id']}'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Gagal membuat pesanan'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

@@ -133,7 +133,7 @@ class _RegistPageState extends State<RegistPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Registrasi Sukses! Silakan Login'), backgroundColor: Colors.green),
         );
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
       } else {
         print("Registrasi Ditolak Server: ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(

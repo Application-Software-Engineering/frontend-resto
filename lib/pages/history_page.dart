@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../services/order_service.dart';
 
 class Order {
   final String id;
@@ -17,7 +18,7 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  bool _isLoading = true;
+  bool _isLoading = true; 
   List<Order> _orders = [];
 
   @override
@@ -27,17 +28,38 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> _loadOrders() async {
-    await Future.delayed(const Duration(seconds: 2));
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (mounted) {
-      setState(() {
-        _orders = [
-          Order(id: 'INV-001', createdAt: DateTime.now().subtract(const Duration(days: 1)).toString(), total: 150000),
-          Order(id: 'INV-002', createdAt: DateTime.now().subtract(const Duration(days: 3)).toString(), total: 75000),
-          Order(id: 'INV-003', createdAt: DateTime.now().subtract(const Duration(days: 5)).toString(), total: 320000),
-        ];
-        _isLoading = false;
-      });
+    try {
+      final orderService = OrderService();
+      final ordersData = await orderService.getOrders();
+
+      if (mounted) {
+        setState(() {
+          _orders = ordersData.map((orderJson) {
+            return Order(
+              id: orderJson['id'].toString(),
+              createdAt: orderJson['created_at'],
+              total: orderJson['total'],
+            );
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat pesanan: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

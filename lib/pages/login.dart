@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/registrasi.dart';
+import 'package:frontend_resto/pages/main_page.dart';
 import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
@@ -48,6 +49,10 @@ class _LoginPageState extends State<LoginPage> {
       print('Login successful');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login successful')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainPage()),
       );
     } else {
       // Handle login failure

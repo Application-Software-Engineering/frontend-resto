@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_resto/pages/edit_menu_page.dart';
+import 'package:http/http.dart' as http;
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -107,8 +109,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             IconButton(
                               icon: const Icon(Icons.remove),
                               onPressed: () {
-                                if (quantity > 1)
+                                if (quantity > 1) {
                                   setModalState(() => quantity--);
+                                }
                               },
                             ),
                             Text(
@@ -130,6 +133,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ],
                   ),
                   const SizedBox(height: 25),
+
 
                   SizedBox(
                     width: double.infinity,
@@ -389,8 +393,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
                   onPressed: () {
-                    // Aksi Edit
-                    print("Edit ${item['nama']}");
+                    
                   },
                 ),
                 IconButton(
