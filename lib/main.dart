@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_resto/pages/splash.dart';
+import 'pages/login.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,10 +16,10 @@ class MyApp extends StatelessWidget {
       title: 'Ocon Food',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFEB204)),
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         useMaterial3: true,
-     
       ),
-      home: const SplashScreen(),
+      home: const LoginPage(),
     );
   }
 }
