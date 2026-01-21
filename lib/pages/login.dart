@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/registrasi.dart';
 import 'package:http/http.dart' as http;
+import 'package:frontend_resto/services/auth_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -32,6 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     final String email = emailController.text;
     final String password = passwordController.text;
 
+    try {
     final response = await http.post(
       Uri.parse('http://localhost:3000/auth/login'), // Gunakan IP yang benar
       headers: {
@@ -43,17 +46,38 @@ class _LoginPageState extends State<LoginPage> {
       }),
     );
 
-    if (response.statusCode == 200) {
-      // Handle successful login
-      print('Login successful');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final String token = data['token'];
+
+        await AuthService().saveToken(token);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login berhasil!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }else {
+        final errorData = jsonDecode(response.body);
+        final String errorMessage = errorData['message'] ?? 'Login gagal. Silakan coba lagi.';
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }catch(e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login successful')),
-      );
-    } else {
-      // Handle login failure
-      print('Login failed: ${response.body}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: ${response.body}'), backgroundColor: Colors.red,),
+        SnackBar(
+          content: Text('Terjadi kesalahan. Silakan coba lagi.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -70,19 +94,26 @@ class _LoginPageState extends State<LoginPage> {
                 width: 85,
                 height: 85,
                 decoration: BoxDecoration(
-                  color: Colors.orangeAccent,
+                  color: Colors.white,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   Icons.fastfood,
                   size: 50,
-                  color: Colors.white,
+                  color: Colors.orangeAccent,
                 ),
               ),
               SizedBox(height: 20),
               Text(
                 'OCONFOOD',
-                style: TextStyle(
+                style: GoogleFonts.montserrat(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -119,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         SizedBox(height: 20),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: TextField(
                             controller: emailController,
                             decoration: InputDecoration(
@@ -134,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         SizedBox(height: 20),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: TextField(
                             controller: passwordController,
                             obscureText: _showpassword,

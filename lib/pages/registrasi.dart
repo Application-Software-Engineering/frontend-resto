@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/login.dart';
 import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart';
 
 class RegistPage extends StatefulWidget {
   const RegistPage({super.key});
@@ -19,65 +20,8 @@ class _RegistPageState extends State<RegistPage> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
-  // Future<void> handleRegist() async {
-  //   if (emailController.text.isEmpty ||
-  //       usernameController.text.isEmpty ||
-  //       passwordController.text.isEmpty ||
-  //       confirmPasswordController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text('Jangan ada yang kosong ya isinya!'),
-  //         backgroundColor: Colors.red,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //   }
-  //   if (passwordController.text != confirmPasswordController.text) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text('Password dan Confirm Password harus sama!'),
-  //         backgroundColor: Colors.red,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //     return;
-  //   }
-
-  //   final url = Uri.parse('http://localhost:3000/auth/register');
-  //   try {
-  //     final response = await http.post(
-  //       url,
-  //       body: {
-  //         'name': usernameController.text,
-  //         'email': emailController.text,
-  //         'password': passwordController.text,
-  //       },
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       Navigator.pop(context);
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text('Registrasi gagal. Silakan coba lagi.'),
-  //           backgroundColor: Colors.red,
-  //           duration: Duration(seconds: 2),
-  //         ),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text('Terjadi kesalahan. Silakan coba lagi.'),
-  //         backgroundColor: Colors.red,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //   }
-  // }
 
   Future<void> handleRegist() async {
-    // 1. Log validasi awal
     print("--- Memulai Proses Registrasi ---");
     
     if (emailController.text.isEmpty ||
@@ -91,7 +35,7 @@ class _RegistPageState extends State<RegistPage> {
           backgroundColor: Colors.red,
         ),
       );
-      return; // Berhenti di sini
+      return; 
     }
 
     if (passwordController.text != confirmPasswordController.text) {
@@ -102,10 +46,9 @@ class _RegistPageState extends State<RegistPage> {
           backgroundColor: Colors.red,
         ),
       );
-      return; // Berhenti di sini
+      return; 
     }
 
-    // Ganti localhost ke 10.0.2.2 jika pakai emulator Android bawaan
     final url = Uri.parse('http://localhost:3000/auth/register');
     
     print("Mencoba request ke: $url");
@@ -124,7 +67,6 @@ class _RegistPageState extends State<RegistPage> {
         },
       ));
 
-      // 2. Log detail response dari server
       print("Status Code Server: ${response.statusCode}");
       print("Body Response: ${response.body}");
 
@@ -144,7 +86,6 @@ class _RegistPageState extends State<RegistPage> {
         );
       }
     } catch (e) {
-      // 3. Log error koneksi/sistem
       print("CRITICAL ERROR (Exception): $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -168,19 +109,26 @@ class _RegistPageState extends State<RegistPage> {
                 width: 85,
                 height: 85,
                 decoration: BoxDecoration(
-                  color: Colors.orangeAccent,
+                  color: Colors.white,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   Icons.fastfood,
                   size: 50,
-                  color: Colors.white,
+                  color: Colors.orangeAccent,
                 ),
               ),
               SizedBox(height: 20),
               Text(
                 'OCONFOOD',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 10),
               Text(
@@ -213,22 +161,7 @@ class _RegistPageState extends State<RegistPage> {
                     child: Column(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          child: TextField(
-                            controller: emailController,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.email),
-                              hintText: 'Masukkan email Anda',
-                              labelText: 'Email',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 20),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: TextField(
                             controller: usernameController,
                             decoration: InputDecoration(
@@ -243,7 +176,22 @@ class _RegistPageState extends State<RegistPage> {
                         ),
                         SizedBox(height: 20),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: TextField(
+                            controller: emailController,
+                            decoration: InputDecoration(
+                              prefixIcon: Icon(Icons.email),
+                              hintText: 'Masukkan email Anda',
+                              labelText: 'Email',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: TextField(
                             controller: passwordController,
                             obscureText: _showpassword,
@@ -269,7 +217,7 @@ class _RegistPageState extends State<RegistPage> {
                         ),
                         SizedBox(height: 20),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: TextField(
                             controller: confirmPasswordController,
                             obscureText: _showpassword2,

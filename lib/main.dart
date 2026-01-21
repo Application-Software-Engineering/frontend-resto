@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/login.dart';
 import 'pages/registrasi.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,6 +19,12 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegistPage(),
       },
+      theme: ThemeData(
+        useMaterial3: true,
+        textTheme: GoogleFonts.interTextTheme(
+          Theme.of(context).textTheme,
+        ),
+      ),
       home: Scaffold(
         backgroundColor: Colors.grey[200],
         body: const RegistPage(),
