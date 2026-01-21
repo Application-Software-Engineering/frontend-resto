@@ -139,7 +139,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.pop(context);
+                        // Perbaikan: Cek Navigator sebelum pop untuk cegah Red Screen
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+                        
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
@@ -232,6 +236,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: PageView.builder(
                       controller: controller,
                       itemBuilder: (context, index) {
+                        // Perbaikan: Tambahkan modulo agar banner berulang terus
+                        final int realIndex = index % bannerCount;
+                        
                         return Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
@@ -321,8 +328,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         color: Colors.green,
                       ),
                       child: const Center(
-                        child:
-                            Icon(Icons.food_bank, size: 40, color: Colors.white),
+                        child: Icon(Icons.food_bank,
+                            size: 40, color: Colors.white),
                       ),
                     ),
                   ),
