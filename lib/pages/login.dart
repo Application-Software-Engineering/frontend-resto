@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/registrasi.dart';
+import 'package:frontend_resto/pages/splash.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend_resto/service/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -58,6 +59,10 @@ class _LoginPageState extends State<LoginPage> {
             content: Text('Login berhasil!'),
             backgroundColor: Colors.green,
           ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SplashScreen()),
         );
       }else {
         final errorData = jsonDecode(response.body);
@@ -193,7 +198,8 @@ class _LoginPageState extends State<LoginPage> {
                         ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              loginUser();
+                              loginUser(
+                              );
                             });
                           },
                           style: ElevatedButton.styleFrom(
