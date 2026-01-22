@@ -41,8 +41,8 @@ class _HistoryPageState extends State<HistoryPage> {
           _orders = ordersData.map((orderJson) {
             return Order(
               id: orderJson['id'].toString(),
-              createdAt: orderJson['created_at'],
-              total: orderJson['total'],
+              createdAt: orderJson['created_at'] ?? DateTime.now().toIso8601String(),
+              total: int.tryParse(orderJson['total'].toString()) ?? 0,
             );
           }).toList();
           _isLoading = false;

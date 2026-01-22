@@ -22,37 +22,41 @@ class _RegistPageState extends State<RegistPage> {
 
 
   Future<void> handleRegist() async {
-    print("--- Memulai Proses Registrasi ---");
+    debugPrint("--- Memulai Proses Registrasi ---");
     
     if (emailController.text.isEmpty ||
         usernameController.text.isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
-      print("Error: Ada field yang kosong.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Jangan ada yang kosong ya isinya!'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      debugPrint("Error: Ada field yang kosong.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Jangan ada yang kosong ya isinya!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       return; 
     }
 
     if (passwordController.text != confirmPasswordController.text) {
-      print("Error: Password dan Confirm Password tidak sinkron.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Password dan Confirm Password harus sama!'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      debugPrint("Error: Password dan Confirm Password tidak sinkron.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password dan Confirm Password harus sama!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       return; 
     }
 
     final url = Uri.parse('http://localhost:3000/auth/register');
     
-    print("Mencoba request ke: $url");
-    print("Data yang dikirim: {name: ${usernameController.text}, email: ${emailController.text}}");
+    debugPrint("Mencoba request ke: $url");
+    debugPrint("Data yang dikirim: {name: ${usernameController.text}, email: ${emailController.text}}");
 
     try {
       final response = await http.post(
@@ -67,17 +71,19 @@ class _RegistPageState extends State<RegistPage> {
         },
       ));
 
-      print("Status Code Server: ${response.statusCode}");
-      print("Body Response: ${response.body}");
+      debugPrint("Status Code Server: ${response.statusCode}");
+      debugPrint("Body Response: ${response.body}");
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
-        print("Registrasi Berhasil!");
+        debugPrint("Registrasi Berhasil!");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registrasi Sukses! Silakan Login'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Registrasi Sukses! Silakan Login'), backgroundColor: Colors.green),
         );
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
       } else {
-        print("Registrasi Ditolak Server: ${response.body}");
+        debugPrint("Registrasi Ditolak Server: ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Gagal: ${response.body}'),
@@ -86,13 +92,15 @@ class _RegistPageState extends State<RegistPage> {
         );
       }
     } catch (e) {
-      print("CRITICAL ERROR (Exception): $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tidak bisa terhubung ke server. Cek koneksi/IP!'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      debugPrint("CRITICAL ERROR (Exception): $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tidak bisa terhubung ke server. Cek koneksi/IP!'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     }
   }
 

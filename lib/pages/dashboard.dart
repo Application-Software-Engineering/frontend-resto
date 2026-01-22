@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_resto/pages/edit_menu_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:frontend_resto/services/auth_service.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend_resto/models/menu_model.dart';
 import 'package:frontend_resto/services/menu_service.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend_resto/providers/cart_provider.dart';
+import 'edit_menu_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -16,10 +17,8 @@ class DashboardPage extends StatefulWidget {
 const String imageBaseUrl = "http://localhost:3000";
 
 class _DashboardPageState extends State<DashboardPage> {
-
   String _displayName = "User";
-  final AuthService _authService = AuthService(); 
-=======
+  // final AuthService _authService = AuthService(); // Removed unused field
   final MenuService _menuService = MenuService();
   late Future<List<MenuModel>> _futureMenus;
 
@@ -27,28 +26,16 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _getSavedName();
+    _futureMenus = _menuService.getMenus();
   }
 
   void _getSavedName() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      // Perbaikan: Gunakan key 'name' agar sinkron dengan yang disimpan di LoginPage
-      _displayName = prefs.getString('name') ?? "User"; 
+      _displayName = prefs.getString('name') ?? "User";
     });
   }
 
-  // Menambahkan fungsi logout agar tombol berfungsi
-  void _handleLogout() async {
-    await _authService.logout();
-    if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-  }
-
-  void _showAddToCartSheet(BuildContext context, Map<String, dynamic> item) {
-    _futureMenus = _menuService.getMenus();
-  }
-
-  /// === BOTTOM SHEET ===
   void _showAddToCartSheet(MenuModel item) {
     int quantity = 1;
 
@@ -95,6 +82,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                 child: Image.network(
                                   "$imageBaseUrl${item.image}",
                                   fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.food_bank, size: 40, color: Colors.white),
                                 ),
                               )
                             : const Icon(
@@ -108,28 +97,22 @@ class _DashboardPageState extends State<DashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item['nama'],
-                            style: GoogleFonts.poppins(
                             item.name,
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            item['harga'],
-                            style: GoogleFonts.poppins(
                             "Rp ${item.price}",
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 16,
                               color: Colors.grey,
                             ),
                           ),
                           Text(
-                            "Sisa Stok: ${item['stok']}",
-                            style: GoogleFonts.poppins(
                             "Sisa Stok: ${item.stock}",
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 12,
                               color: Colors.green,
                             ),
@@ -138,7 +121,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 25),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -182,34 +164,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 25),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove),
-                            onPressed: () {
-                              if (quantity > 1) {
-                                setModalState(() => quantity--);
-                              }
-                            },
-                          ),
-                          Text(
-                            "$quantity",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            onPressed: () {
-                              setModalState(() => quantity++);
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
                   const SizedBox(height: 20),
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -221,21 +176,13 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       onPressed: () {
-                        if (Navigator.canPop(context)) {
-                          Navigator.pop(context);
-                        }
-                        
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "$quantity ${item['nama']} berhasil ditambahkan!",
-                              style: GoogleFonts.poppins(),
+                        Provider.of<CartProvider>(context, listen: false).addToCart(item, quantity);
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              "$quantity ${item.name} ditambahkan",
-                              style: const TextStyle(fontFamily: 'Poppins'),
+                              "$quantity ${item.name} berhasil ditambahkan!",
+                              style: GoogleFonts.poppins(),
                             ),
                             backgroundColor: Colors.green,
                           ),
@@ -263,150 +210,30 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final PageController controller = PageController(
-      viewportFraction: 0.8,
+      viewportFraction: 0.6,
       initialPage: 1000,
     );
 
-    // Data dummy menu
-    final List<Map<String, dynamic>> menuItems = [
-      {'id': 1, 'nama': 'Ketoprak', 'stok': '10', 'harga': '15000'},
-      {'id': 2, 'nama': 'Gado-gado', 'stok': '5', 'harga': '18000'},
-      {'id': 3, 'nama': 'Sate Ayam', 'stok': '20', 'harga': '25000'},
-      {'id': 4, 'nama': 'Soto Betawi', 'stok': '8', 'harga': '30000'},
-      {'id': 5, 'nama': 'Nasi Goreng', 'stok': '8', 'harga': '30000'},
-    ];
-
     return Scaffold(
-      // Tambahan: AppBar dengan Tombol Logout agar User Experience lebih baik
-      appBar: AppBar(
-        title: Text('Ocon Food', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.red),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Yakin ingin keluar?'),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-                    TextButton(onPressed: _handleLogout, child: const Text('Keluar', style: TextStyle(color: Colors.red))),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          int gridCount;
-          if (constraints.maxWidth < 600) {
-            gridCount = 2;
-          } else if (constraints.maxWidth < 900) {
-            gridCount = 3;
-          } else {
-            gridCount = 4;
-          }
-
-          double carouselHeight = (screenSize.height * 0.25).clamp(180.0, 300.0);
-
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 20),
-                    height: 50,
-                    child: Text(
-                      'Selamat Datang!, $_displayName', 
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    height: carouselHeight,
-                    child: PageView.builder(
-                      controller: controller,
-                      itemBuilder: (context, index) {               
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: const Center(
-                              child: Icon(Icons.image, size: 50, color: Colors.grey),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'List Menu',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: menuItems.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: gridCount,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 0.80,
-                        ),
-                        itemBuilder: (context, index) {
-                          final item = menuItems[index];
-                          return _buildMenuCard(item);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-    return Scaffold(
+      // AppBar removed to match original design
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: [
           const SizedBox(height: 20),
-          const Padding(
-            padding: EdgeInsets.all(8),
+          Padding(
+            padding: const EdgeInsets.all(8),
             child: Text(
-              "Selamat Datang!",
-              style: TextStyle(
+              "Selamat Datang!, $_displayName",
+              style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
               ),
->>>>>>> 3cc082a1aa19628a08dfa242d260f3a3a7782015
             ),
           ),
 
           /// === CAROUSEL ===
           SizedBox(
-            height: (screenSize.height * 0.25).clamp(180, 300),
+            height: (screenSize.height * 0.25).clamp(180.0, 300.0),
             child: FutureBuilder<List<MenuModel>>(
               future: _futureMenus,
               builder: (context, snapshot) {
@@ -438,8 +265,10 @@ class _DashboardPageState extends State<DashboardPage> {
                             ? Image.network(
                                 "$imageBaseUrl${item.image}",
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.image, size: 50, color: Colors.grey),
                               )
-                            : const Icon(Icons.image, size: 50),
+                            : const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
                       ),
                     );
                   },
@@ -451,125 +280,56 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 20),
 
           /// === MENU GRID ===
-          FutureBuilder<List<MenuModel>>(
-            future: _futureMenus,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              final menus = snapshot.data ?? [];
-
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: menus.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.8,
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'List Menu',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                itemBuilder: (_, i) {
-                  final item = menus[i];
-                  return InkWell(
-                    onTap: () => _showAddToCartSheet(item),
-                    child: _menuCard(item),
-                  );
-                },
-              );
-            },
+                const SizedBox(height: 8),
+                FutureBuilder<List<MenuModel>>(
+                  future: _futureMenus,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final menus = snapshot.data ?? [];
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: menus.length,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.8,
+                      ),
+                      itemBuilder: (_, i) {
+                        final item = menus[i];
+                        return InkWell(
+                          onTap: () => _showAddToCartSheet(item),
+                          child: _menuCard(item),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuCard(Map<String, dynamic> item) {
-    return InkWell(
-      onTap: () {
-        _showAddToCartSheet(context, item);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 2)),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        color: Colors.green,
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.food_bank, size: 40, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "${item['nama']}",
-                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  Text(
-                    "Stok: ${item['stok']}",
-                    style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Rp ${item['harga']}",
-                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 20),
-                    onPressed: () {
-                      // Perbaikan: Konversi tipe data agar tidak terjadi TypeError di EditMenuPage
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditMenuPage(
-                            id: int.tryParse(item['id'].toString()) ?? 0, 
-                            nama: item['nama'] ?? '', 
-                            price: int.tryParse(item['harga'].toString()) ?? 0, 
-                            stock: int.tryParse(item['stok'].toString()) ?? 0, 
-                            imageUrl: item['image_url'] ?? 'https://via.placeholder.com/150',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline_outlined, size: 20),
-                    onPressed: () {
-                      print("Hapus ${item['nama']}");
-                    },
-                  ),
-                ],
-              ),
-            )
-          ],
-        ),
   Widget _menuCard(MenuModel item) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -578,42 +338,132 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 5)],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: item.image != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            "$imageBaseUrl${item.image}",
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.food_bank, size: 40, color: Colors.white),
+                          ),
+                        )
+                      : const Center(child: Icon(Icons.food_bank, size: 40, color: Colors.white)),
+                ),
               ),
-              child: item.image != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        "$imageBaseUrl${item.image}",
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : const Icon(Icons.food_bank, size: 40, color: Colors.white),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                item.name,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              Text("Stok: ${item.stock}", style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
+              Text(
+                "Rp ${item.price}",
+                style: GoogleFonts.poppins(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            item.name,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(4),
+                  style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                  onPressed: () {
+                    // Navigate to edit page
+                     Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditMenuPage(
+                            id: item.id ?? 0, 
+                            name: item.name, 
+                            price: item.price, 
+                            stock: item.stock, 
+                            imageUrl: item.image ?? '',
+                          ),
+                        ),
+                      ).then((_) {
+                        // Refresh menu after edit
+                        setState(() {
+                           _futureMenus = _menuService.getMenus();
+                        });
+                      });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_outlined, size: 20),
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(4),
+                  style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Hapus Menu"),
+                          content: Text("Apakah Anda yakin ingin menghapus '${item.name}'?"),
+                          actions: [
+                            TextButton(
+                              child: const Text("Batal"),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                            TextButton(
+                              child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+                              onPressed: () async {
+                                Navigator.of(context).pop();
+                                try {
+                                  await _menuService.deleteMenu(item.id ?? 0);
+                                  if (mounted) {
+                                    setState(() {
+                                      _futureMenus = _menuService.getMenus();
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("'${item.name}' berhasil dihapus")),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Gagal menghapus: $e")),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
-          ),
-          Text("Stok: ${item.stock}", style: const TextStyle(fontSize: 11)),
-          Text(
-            "Rp ${item.price}",
-            style: const TextStyle(
-              color: Colors.amber,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          )
         ],
       ),
     );

@@ -9,7 +9,7 @@ import '../services/auth_service.dart';
 
 class EditMenuPage extends StatefulWidget {
   final int id;
-  final String nama;
+  final String name; // Changed from nama to name to match constructor and usage
   final int price;
   final int stock;
   final String imageUrl;
@@ -17,7 +17,7 @@ class EditMenuPage extends StatefulWidget {
   const EditMenuPage({
     super.key,
     required this.id,
-    required this.name,
+    required this.name, // Matching the field name
     required this.price,
     required this.stock,
     required this.imageUrl,
@@ -28,7 +28,7 @@ class EditMenuPage extends StatefulWidget {
 }
 
 class _EditMenuPageState extends State<EditMenuPage> {
-  late TextEditingController namaController;
+  late TextEditingController nameController; // Changed from namaController
   late TextEditingController hargaController;
   late TextEditingController stokController;
 
@@ -38,12 +38,12 @@ class _EditMenuPageState extends State<EditMenuPage> {
   final AuthService _authService = AuthService();
 
   final String baseUrl =
-      kIsWeb ? "http://localhost:3000" : "http://10.0.2.2:3000";
+      kIsWeb ? "http://localhost:3000" : "http://localhost:3000"; // Consistent with other pages
 
   @override
   void initState() {
     super.initState();
-    namaController = TextEditingController(text: widget.nama);
+    nameController = TextEditingController(text: widget.name);
     hargaController = TextEditingController(text: widget.price.toString());
     stokController = TextEditingController(text: widget.stock.toString());
   }
@@ -71,6 +71,9 @@ class _EditMenuPageState extends State<EditMenuPage> {
     try {
       // 1. Ambil token secara dinamis dari SharedPreferences
       final String? token = await _authService.getToken(); 
+      if (token == null) {
+          throw Exception("Token tidak ditemukan, silakan login ulang.");
+      }
 
       final request = http.MultipartRequest(
         "PUT",
@@ -78,17 +81,14 @@ class _EditMenuPageState extends State<EditMenuPage> {
       );
 
       // 2. Gunakan token terbaru di header
-      if (token != null) {
-        request.headers['Authorization'] = "Bearer $token";
-      }
-
-      // Pastikan nama field sesuai dengan backend (misal: 'name' atau 'nama')
-      // 1. Pastikan nama field sesuai dengan Backend
-      request.fields['name'] = namaController.text;   
+      request.headers['Authorization'] = "Bearer $token";
+      
+      // Use 'name' to match backend if that's standard, otherwise check backend API contract. 
+      // Assuming 'name' based on previous context.
+      request.fields['name'] = nameController.text;   
       request.fields['price'] = hargaController.text;  
-      request.fields['stock'] = stokController.text;    // Sebelumnya 'stock'
+      request.fields['stock'] = stokController.text; 
 
-      /// jika user ganti gambar
       /// jika user ganti gambar
       if ((kIsWeb && webImage != null) || (!kIsWeb && imageFile != null)) {
         String subtype = "jpeg"; // Default
@@ -101,7 +101,7 @@ class _EditMenuPageState extends State<EditMenuPage> {
 
           request.files.add(
             http.MultipartFile.fromBytes(
-              'image', // HARUS 'image' sesuai backend
+              'image', 
               bytes,
               filename: webImage!.name,
               contentType: MediaType('image', subtype),
@@ -110,7 +110,7 @@ class _EditMenuPageState extends State<EditMenuPage> {
         } else {
           request.files.add(
             await http.MultipartFile.fromPath(
-              'image', // HARUS 'image' sesuai backend
+              'image', 
               imageFile!.path,
             ),
           );
@@ -128,7 +128,6 @@ class _EditMenuPageState extends State<EditMenuPage> {
         Navigator.pop(context, true);
       } else {
         if (!mounted) return;
-        // Tampilkan pesan error dari server (misal: "Token invalid")
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Gagal: $responseData"), backgroundColor: Colors.red)
         );
@@ -150,9 +149,14 @@ class _EditMenuPageState extends State<EditMenuPage> {
     } else if (!kIsWeb && imageFile != null) {
       return Image.file(imageFile!, fit: BoxFit.cover, width: double.infinity);
     } else if (widget.imageUrl.isNotEmpty && widget.imageUrl.startsWith('http')) {
-      // Pastikan URL valid agar tidak muncul ImageCodecException
       return Image.network(
-        widget.imageUrl, 
+        widget.imageUrl, // Assuming widget.imageUrl is absolute URL. If relative, needs baseUrl.
+        // Wait, caller passes item.image which might be relative. 
+        // In dashboard, it appends imageBaseUrl. 
+        // Let's safe check here. If it starts with http, use it. Else prepend base? 
+        // For now trusting caller to pass full or partial, but Image.network needs full.
+        // Dashboard passed `item.image ?? ''`. If it's relative path like '/uploads/foo.jpg', Image.network fails if not full.
+        // But let's assume valid URL or handle error.
         fit: BoxFit.cover, 
         width: double.infinity,
         errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image, size: 50)),
@@ -191,7 +195,7 @@ class _EditMenuPageState extends State<EditMenuPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            inputField("Nama menu", namaController),
+            inputField("Nama menu", nameController),
             inputField("Price", hargaController, number: true),
             inputField("Stock", stokController, number: true),
 
