@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:frontend_resto/pages/dashboard.dart';
 import 'package:frontend_resto/pages/registrasi.dart';
 import 'package:frontend_resto/pages/main_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -34,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
     final String password = passwordController.text;
 
     final response = await http.post(
-      Uri.parse('http://localhost:3000/auth/login'), // Gunakan IP yang benar
+      Uri.parse('http://localhost:3000/auth/login'),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -44,24 +46,25 @@ class _LoginPageState extends State<LoginPage> {
       }),
     );
 
+
     if (response.statusCode == 200) {
-      // Handle successful login
-      print('Login successful');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login successful')),
-      );
+      final data = jsonDecode(response.body);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', data['token']);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MainPage()),
-      );
-    } else {
-      // Handle login failure
-      print('Login failed: ${response.body}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: ${response.body}'), backgroundColor: Colors.red,),
+        MaterialPageRoute(builder: (_) => const MainPage()),
       );
     }
-  }
+    else {
+          // Handle login failure
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login failed: ${response.body}'), backgroundColor: Colors.red,),
+          );
+        }
+      }
 
   @override
   Widget build(BuildContext context) {

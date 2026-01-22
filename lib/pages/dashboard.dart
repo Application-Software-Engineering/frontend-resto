@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_resto/pages/edit_menu_page.dart';
-import 'package:http/http.dart' as http;
+import 'package:frontend_resto/models/menu_model.dart';
+import 'package:frontend_resto/services/menu_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -9,23 +9,36 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
+const String imageBaseUrl = "http://localhost:3000";
+
 class _DashboardPageState extends State<DashboardPage> {
-  void _showAddToCartSheet(BuildContext context, Map<String, dynamic> item) {
+  final MenuService _menuService = MenuService();
+  late Future<List<MenuModel>> _futureMenus;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureMenus = _menuService.getMenus();
+  }
+
+  /// === BOTTOM SHEET ===
+  void _showAddToCartSheet(MenuModel item) {
     int quantity = 1;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-          ),
-          padding: const EdgeInsets.all(20.0),
-          child: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setModalState) {
-              return Column(
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              ),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -47,21 +60,29 @@ class _DashboardPageState extends State<DashboardPage> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: Colors.red[100],
+                          color: Colors.green,
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        child: const Icon(
-                          Icons.food_bank,
-                          size: 40,
-                          color: Colors.red,
-                        ),
+                        child: item.image != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: Image.network(
+                                  "$imageBaseUrl${item.image}",
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.food_bank,
+                                size: 40,
+                                color: Colors.white,
+                              ),
                       ),
                       const SizedBox(width: 15),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item['nama'],
+                            item.name,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -69,7 +90,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                           ),
                           Text(
-                            item['harga'],
+                            "Rp ${item.price}",
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.grey,
@@ -77,7 +98,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                           ),
                           Text(
-                            "Sisa Stok: ${item['stok']}",
+                            "Sisa Stok: ${item.stock}",
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.green,
@@ -87,6 +108,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 25),
 
                   Row(
@@ -99,41 +121,32 @@ class _DashboardPageState extends State<DashboardPage> {
                           fontFamily: 'Poppins',
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove),
-                              onPressed: () {
-                                if (quantity > 1) {
-                                  setModalState(() => quantity--);
-                                }
-                              },
-                            ),
-                            Text(
-                              "$quantity",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              onPressed: () {
-                                setModalState(() => quantity++);
-                              },
-                            ),
-                          ],
-                        ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove),
+                            onPressed: () {
+                              if (quantity > 1) {
+                                setModalState(() => quantity--);
+                              }
+                            },
+                          ),
+                          Text(
+                            "$quantity",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add),
+                            onPressed: () {
+                              setModalState(() => quantity++);
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 25),
 
+                  const SizedBox(height: 20),
 
                   SizedBox(
                     width: double.infinity,
@@ -147,15 +160,13 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       onPressed: () {
                         Navigator.pop(context);
-
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              "$quantity ${item['nama']} berhasil ditambahkan!",
+                              "$quantity ${item.name} ditambahkan",
                               style: const TextStyle(fontFamily: 'Poppins'),
                             ),
                             backgroundColor: Colors.green,
-                            duration: const Duration(seconds: 1),
                           ),
                         );
                       },
@@ -164,16 +175,14 @@ class _DashboardPageState extends State<DashboardPage> {
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Poppins',
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
                 ],
-              );
-            },
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -182,234 +191,155 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final isTablet = screenSize.width > 600;
-
     final PageController controller = PageController(
-      viewportFraction: isTablet ? 0.5 : 0.8,
+      viewportFraction: 0.8,
       initialPage: 1000,
     );
 
-    final List<Map<String, dynamic>> menuItems = [
-      {'nama': 'Ketoprak', 'stok': '10', 'harga': 'Rp 15.000'},
-      {'nama': 'Gado-gado', 'stok': '5', 'harga': 'Rp 18.000'},
-      {'nama': 'Sate Ayam', 'stok': '20', 'harga': 'Rp 25.000'},
-      {'nama': 'Soto Betawi', 'stok': '8', 'harga': 'Rp 30.000'},
-      {'nama': 'Nasi Goreng', 'stok': '8', 'harga': 'Rp 30.000'},
-    ];
-
-    final int bannerCount = menuItems.length;
-
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          int gridCount;
-          if (constraints.maxWidth < 600) {
-            gridCount = 2;
-          } else if (constraints.maxWidth < 900) {
-            gridCount = 3;
-          } else {
-            gridCount = 4;
-          }
-
-          double carouselHeight = (screenSize.height * 0.25).clamp(
-            180.0,
-            300.0,
-          );
-
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 20),
-                    height: 50,
-                    child: Text(
-                      'Selamat Datang! User',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    height: carouselHeight,
-                    child: PageView.builder(
-                      controller: controller,
-                      itemBuilder: (context, index) {
-                        final int realIndex = index % bannerCount;
-            
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-            
-                            child: Center(
-                              child: Icon(
-                                Icons.image,
-                                size: 50,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'List Menu',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: menuItems.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: gridCount,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 0.80,
-                        ),
-                        itemBuilder: (context, index) {
-                          final item = menuItems[index];
-                          return _buildMenuCard(item);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+      body: ListView(
+        padding: const EdgeInsets.all(8),
+        children: [
+          const SizedBox(height: 20),
+          const Padding(
+            padding: EdgeInsets.all(8),
+            child: Text(
+              "Selamat Datang!",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
             ),
-          );
-        },
+          ),
+
+          /// === CAROUSEL ===
+          SizedBox(
+            height: (screenSize.height * 0.25).clamp(180, 300),
+            child: FutureBuilder<List<MenuModel>>(
+              future: _futureMenus,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final menus = snapshot.data ?? [];
+
+                if (menus.isEmpty) {
+                  return const Center(child: Text("Belum ada menu"));
+                }
+
+                return PageView.builder(
+                  controller: controller,
+                  itemCount: menus.length,
+                  itemBuilder: (_, index) {
+                    final item = menus[index];
+
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: Colors.grey[200],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: item.image != null
+                            ? Image.network(
+                                "$imageBaseUrl${item.image}",
+                                fit: BoxFit.cover,
+                              )
+                            : const Icon(Icons.image, size: 50),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          /// === MENU GRID ===
+          FutureBuilder<List<MenuModel>>(
+            future: _futureMenus,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final menus = snapshot.data ?? [];
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: menus.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 0.8,
+                ),
+                itemBuilder: (_, i) {
+                  final item = menus[i];
+                  return InkWell(
+                    onTap: () => _showAddToCartSheet(item),
+                    child: _menuCard(item),
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMenuCard(Map<String, dynamic> item) {
-    return InkWell(
-      onTap: () {
-        _showAddToCartSheet(context, item);
-      },
-    child: Container(
+  Widget _menuCard(MenuModel item) {
+    return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(  
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 2)),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 5)],
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    color: Colors.green ,
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.food_bank, size: 40, color: Colors.white),
-                  ),
-                ),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      "${item['nama']}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins',
+              child: item.image != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        "$imageBaseUrl${item.image}",
+                        fit: BoxFit.cover,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                "Stok: ${item['stok']}",
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "${item['harga']}",
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.amber,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-            ],
+                    )
+                  : const Icon(Icons.food_bank, size: 40, color: Colors.white),
+            ),
           ),
-        ),
-        Positioned(
-          top: 0,
-          right: 0,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white30,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-              ),
+          const SizedBox(height: 8),
+          Text(
+            item.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
             ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () {
-                    
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline_outlined),
-                  onPressed: () {
-                    // Aksi Hapus
-                    print("Hapus ${item['nama']}");
-                  },
-                ),
-              ],
+          ),
+          Text("Stok: ${item.stock}", style: const TextStyle(fontSize: 11)),
+          Text(
+            "Rp ${item.price}",
+            style: const TextStyle(
+              color: Colors.amber,
+              fontWeight: FontWeight.bold,
             ),
-          )
-        )
+          ),
         ],
       ),
-    ),
-   );
+    );
   }
 }

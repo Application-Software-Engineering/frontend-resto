@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../service/order_service.dart';
+import '../services/order_service.dart';
 
 class Menu {
   final String id;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_resto/pages/splash.dart';
+import 'package:frontend_resto/pages/login.dart';
+// import 'package:frontend_resto/pages/splash.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,9 +17,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFEB204)),
         useMaterial3: true,
-     
       ),
-      home: const SplashScreen(),
+      home: const LoginPage(),
     );
   }
 }
