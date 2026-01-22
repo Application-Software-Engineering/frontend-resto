@@ -264,7 +264,7 @@ class _CartPageState extends State<CartPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-               backgroundColor: const Color(0xFFFF6B35),
+               backgroundColor: const Color(0xFFFEB204),
                foregroundColor: Colors.white,
             ),
             child: const Text('Pesan'),

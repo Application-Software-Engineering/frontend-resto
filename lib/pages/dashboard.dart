@@ -69,13 +69,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   Row(
                     children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
                         child: item.image != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(15),
@@ -86,10 +81,15 @@ class _DashboardPageState extends State<DashboardPage> {
                                       const Icon(Icons.food_bank, size: 40, color: Colors.white),
                                 ),
                               )
-                            : const Icon(
-                                Icons.food_bank,
-                                size: 40,
-                                color: Colors.white,
+                            : Container(
+                                width: 80,
+                                height: 80,
+                                color: Colors.green,
+                                child: const Icon(
+                                  Icons.food_bank,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
                               ),
                       ),
                       const SizedBox(width: 15),
@@ -184,7 +184,6 @@ class _DashboardPageState extends State<DashboardPage> {
                               "$quantity ${item.name} berhasil ditambahkan!",
                               style: GoogleFonts.poppins(),
                             ),
-                            backgroundColor: Colors.green,
                           ),
                         );
                       },
@@ -206,9 +205,45 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // ================== DELETE ==================
+  void _confirmDelete(MenuModel item) {
+    if (item.id == null) return;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Hapus Menu"),
+        content: Text("Yakin hapus ${item.name}?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _menuService.deleteMenu(item.id!);
+              setState(() {
+                _futureMenus = _menuService.getMenus();
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Menu berhasil dihapus"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text("Hapus"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================== UI ==================
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
     final PageController controller = PageController(
       viewportFraction: 0.6,
       initialPage: 1000,
@@ -231,27 +266,21 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
 
-          /// === CAROUSEL ===
+          // ================== CAROUSEL ==================
           SizedBox(
             height: (screenSize.height * 0.25).clamp(180.0, 300.0),
             child: FutureBuilder<List<MenuModel>>(
               future: _futureMenus,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final menus = snapshot.data ?? [];
-
-                if (menus.isEmpty) {
-                  return const Center(child: Text("Belum ada menu"));
-                }
-
+                final menus = snapshot.data!;
                 return PageView.builder(
                   controller: controller,
-                  itemCount: menus.length,
                   itemBuilder: (_, index) {
-                    final item = menus[index];
+                    final item = menus[index % menus.length];
 
                     return Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -330,6 +359,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // ================== MENU CARD ==================
   Widget _menuCard(MenuModel item) {
     return Container(
       padding: const EdgeInsets.all(8),

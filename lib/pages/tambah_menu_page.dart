@@ -154,17 +154,19 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
           controller: controller,
           keyboardType: number ? TextInputType.number : TextInputType.text,
           decoration: InputDecoration(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 14,
             ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         const SizedBox(height: 14),
       ],
     );
   }
+
+  /// UI
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +265,7 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
