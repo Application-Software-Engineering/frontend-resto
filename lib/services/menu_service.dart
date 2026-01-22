@@ -33,6 +33,8 @@ class MenuService {
     }
   }
 
+
+  // delete menu
   Future<void> deleteMenu(int id) async {
     final token = await _authService.getToken();
     final url = Uri.parse('$baseUrl/menus/$id');
@@ -48,23 +50,6 @@ class MenuService {
       throw Exception('Gagal hapus data menu: ${response.statusCode} - ${response.body}');
     }
   }
-
-  // delete menu
-    Future<void> deleteMenu(int id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    final response = await http.delete(
-      Uri.parse("$baseUrl/menus/$id"),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception("Gagal menghapus menu");
-    }
-  }
 }
+
 

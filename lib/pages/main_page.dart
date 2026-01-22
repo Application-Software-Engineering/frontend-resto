@@ -141,44 +141,6 @@ class _MainPageState extends State<MainPage> {
             ),
           );
         },
-        backgroundColor: const Color(0xFFFEB204), // Warna Kuning Tema
-        child: Stack(
-          children: [
-            const Center(
-              child: Icon(Icons.shopping_cart_outlined, color: Colors.black, size: 28),
-            ),
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Consumer<CartProvider>(
-                builder: (context, cart, child) {
-                  return cart.itemCount > 0 
-                  ? Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${cart.itemCount}', // Variable jumlah item
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  )
-                  : const SizedBox.shrink();
-                },
-              ),
-            ),
-          ],
-        ),
       ),
 
       bottomNavigationBar: BottomNavigationBar(

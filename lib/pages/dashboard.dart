@@ -268,7 +268,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
           // ================== CAROUSEL ==================
           SizedBox(
-            height: (screenSize.height * 0.25).clamp(180.0, 300.0),
+            height: (MediaQuery.of(context).size.height * 0.25).clamp(180.0, 300.0),
             child: FutureBuilder<List<MenuModel>>(
               future: _futureMenus,
               builder: (context, snapshot) {
