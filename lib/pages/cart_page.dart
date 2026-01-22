@@ -3,8 +3,7 @@ import 'package:frontend_resto/services/order_service.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend_resto/providers/cart_provider.dart';
 import 'package:frontend_resto/models/menu_model.dart';
-import '../services/auth_service.dart'; // Just in case, though might not be needed if OrderService handles token internally
-
+import '../services/auth_service.dart'; 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
 

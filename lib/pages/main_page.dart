@@ -6,7 +6,6 @@ import 'package:frontend_resto/pages/history_page.dart';
 import 'package:frontend_resto/pages/login.dart';
 import 'package:frontend_resto/services/auth_service.dart';
 import 'package:frontend_resto/pages/tambah_menu_page.dart';
-import 'package:provider/provider.dart';
 import 'package:frontend_resto/providers/cart_provider.dart';
 
 class MainPage extends StatefulWidget {
