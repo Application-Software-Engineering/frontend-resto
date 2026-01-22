@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+// Import AuthService agar token tidak hardcoded
+import '../services/auth_service.dart'; 
 
 class EditMenuPage extends StatefulWidget {
   final int id;
@@ -15,7 +17,7 @@ class EditMenuPage extends StatefulWidget {
   const EditMenuPage({
     super.key,
     required this.id,
-    required this.nama,
+    required this.name,
     required this.price,
     required this.stock,
     required this.imageUrl,
@@ -33,21 +35,17 @@ class _EditMenuPageState extends State<EditMenuPage> {
   File? imageFile;
   XFile? webImage;
   bool loading = false;
+  final AuthService _authService = AuthService();
 
   final String baseUrl =
       kIsWeb ? "http://localhost:3000" : "http://10.0.2.2:3000";
-
-  final String token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJmYWl6YWxAbWFpbC5jb20iLCJpYXQiOjE3Njg4ODQyNzYsImV4cCI6MTc2ODg4Nzg3Nn0.lvJ7udpGaUYJrUS-CRHVn9D_L-5B49W6ds4NuAnw2zk";
 
   @override
   void initState() {
     super.initState();
     namaController = TextEditingController(text: widget.nama);
-    hargaController =
-        TextEditingController(text: widget.price.toString());
-    stokController =
-        TextEditingController(text: widget.stock.toString());
+    hargaController = TextEditingController(text: widget.price.toString());
+    stokController = TextEditingController(text: widget.stock.toString());
   }
 
   /// PICK IMAGE
@@ -71,32 +69,39 @@ class _EditMenuPageState extends State<EditMenuPage> {
     setState(() => loading = true);
 
     try {
+      // 1. Ambil token secara dinamis dari SharedPreferences
+      final String? token = await _authService.getToken(); 
+
       final request = http.MultipartRequest(
         "PUT",
         Uri.parse("$baseUrl/menus/${widget.id}"),
       );
 
-      request.headers['Authorization'] = "Bearer $token";
+      // 2. Gunakan token terbaru di header
+      if (token != null) {
+        request.headers['Authorization'] = "Bearer $token";
+      }
 
-      request.fields['name'] = namaController.text;
-      request.fields['price'] = hargaController.text;
-      request.fields['stock'] = stokController.text;
+      // Pastikan nama field sesuai dengan backend (misal: 'name' atau 'nama')
+      // 1. Pastikan nama field sesuai dengan Backend
+      request.fields['name'] = namaController.text;   
+      request.fields['price'] = hargaController.text;  
+      request.fields['stock'] = stokController.text;    // Sebelumnya 'stock'
 
       /// jika user ganti gambar
-      if ((kIsWeb && webImage != null) ||
-          (!kIsWeb && imageFile != null)) {
+      /// jika user ganti gambar
+      if ((kIsWeb && webImage != null) || (!kIsWeb && imageFile != null)) {
+        String subtype = "jpeg"; // Default
+        
         if (kIsWeb) {
           final bytes = await webImage!.readAsBytes();
           final ext = webImage!.name.split('.').last.toLowerCase();
-
-          String subtype = "jpeg";
           if (ext == "png") subtype = "png";
-          if (ext == "gif") subtype = "gif";
           if (ext == "webp") subtype = "webp";
 
           request.files.add(
             http.MultipartFile.fromBytes(
-              'image',
+              'image', // HARUS 'image' sesuai backend
               bytes,
               filename: webImage!.name,
               contentType: MediaType('image', subtype),
@@ -105,7 +110,7 @@ class _EditMenuPageState extends State<EditMenuPage> {
         } else {
           request.files.add(
             await http.MultipartFile.fromPath(
-              'image',
+              'image', // HARUS 'image' sesuai backend
               imageFile!.path,
             ),
           );
@@ -113,50 +118,62 @@ class _EditMenuPageState extends State<EditMenuPage> {
       }
 
       final response = await request.send();
+      final responseData = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Menu berhasil diupdate")),
+          const SnackBar(content: Text("Menu berhasil diupdate"), backgroundColor: Colors.green),
         );
         Navigator.pop(context, true);
       } else {
-        final body = await response.stream.bytesToString();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(body)));
+        if (!mounted) return;
+        // Tampilkan pesan error dari server (misal: "Token invalid")
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal: $responseData"), backgroundColor: Colors.red)
+        );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red)
+      );
     } finally {
-      setState(() => loading = false);
+      if (mounted) setState(() => loading = false);
     }
   }
 
   /// PREVIEW IMAGE
   Widget imagePreview() {
     if (kIsWeb && webImage != null) {
-      return Image.network(webImage!.path, fit: BoxFit.cover);
+      return Image.network(webImage!.path, fit: BoxFit.cover, width: double.infinity);
     } else if (!kIsWeb && imageFile != null) {
-      return Image.file(imageFile!, fit: BoxFit.cover);
+      return Image.file(imageFile!, fit: BoxFit.cover, width: double.infinity);
+    } else if (widget.imageUrl.isNotEmpty && widget.imageUrl.startsWith('http')) {
+      // Pastikan URL valid agar tidak muncul ImageCodecException
+      return Image.network(
+        widget.imageUrl, 
+        fit: BoxFit.cover, 
+        width: double.infinity,
+        errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image, size: 50)),
+      );
     } else {
-      return Image.network(widget.imageUrl, fit: BoxFit.cover);
+      return const Center(child: Icon(Icons.image, size: 50, color: Colors.grey));
     }
   }
 
-  Widget inputField(String label, TextEditingController controller,
-      {bool number = false}) {
+  Widget inputField(String label, TextEditingController controller, {bool number = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
-          keyboardType:
-              number ? TextInputType.number : TextInputType.text,
+          keyboardType: number ? TextInputType.number : TextInputType.text,
           decoration: InputDecoration(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         const SizedBox(height: 14),
@@ -168,10 +185,6 @@ class _EditMenuPageState extends State<EditMenuPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: const Text("Update Menu"),
       ),
       body: SingleChildScrollView(
@@ -182,7 +195,7 @@ class _EditMenuPageState extends State<EditMenuPage> {
             inputField("Price", hargaController, number: true),
             inputField("Stock", stokController, number: true),
 
-            /// IMAGE
+            /// IMAGE AREA
             GestureDetector(
               onTap: pickImage,
               child: Container(
@@ -204,8 +217,7 @@ class _EditMenuPageState extends State<EditMenuPage> {
                       child: CircleAvatar(
                         radius: 16,
                         backgroundColor: Colors.black54,
-                        child: const Icon(Icons.edit,
-                            size: 16, color: Colors.white),
+                        child: const Icon(Icons.edit, size: 16, color: Colors.white),
                       ),
                     ),
                   ],
@@ -227,16 +239,14 @@ class _EditMenuPageState extends State<EditMenuPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: loading ? null : updateMenu,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
                     child: loading
                         ? const SizedBox(
                             height: 18,
                             width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text("Update"),
+                        : const Text("Update", style: TextStyle(color: Colors.white)),
                   ),
                 ),
               ],

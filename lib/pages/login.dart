@@ -2,10 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/registrasi.dart';
-import 'package:frontend_resto/pages/splash.dart';
 import 'package:frontend_resto/pages/main_page.dart';
 import 'package:http/http.dart' as http;
-import 'package:frontend_resto/service/auth_service.dart';
+import 'package:frontend_resto/services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,12 +17,21 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _showpassword = true;
+  bool isLoading = false;
+
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   Future<void> loginUser() async {
+    setState(() {
+     isLoading = true; 
+
+    });
     if (emailController.text.isEmpty ||
         passwordController.text.isEmpty) {
+        setState(() {
+          isLoading = false;
+        });
       print("Error: Ada field yang kosong.");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -39,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
     final response = await http.post(
-      Uri.parse('http://localhost:3000/auth/login'), // Gunakan IP yang benar
+      Uri.parse('http://localhost:3000/auth/login'),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -51,8 +59,8 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final String token = data['token'];
         final String userName = data['name'] ?? 'User';
+        final String token = data['token'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('name', userName);
@@ -68,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
         );
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const SplashScreen()),
+          MaterialPageRoute(builder: (context) => const MainPage()),
         );
       }else {
         final errorData = jsonDecode(response.body);
@@ -87,11 +95,13 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login successful')),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainPage()),
-      );
-    } 
+    } finally {
+       if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+       }
+    }
   }
 
   @override
@@ -202,20 +212,27 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         SizedBox(height: 30),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              loginUser(
-                              );
-                            });
-                          },
+                        ElevatedButton  (
+                          onPressed: isLoading ? null : loginUser,
                           style: ElevatedButton.styleFrom(
                             minimumSize: Size(double.infinity, 50),
-                            backgroundColor: Colors.orange,
+                            backgroundColor: Colors.orangeAccent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                          child: Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          child: isLoading 
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text("Login", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
                         ),
-                        SizedBox(height: 35),
+                        SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [

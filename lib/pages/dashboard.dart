@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/edit_menu_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:frontend_resto/services/auth_service.dart'; // Menambahkan import AuthService
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -11,8 +12,8 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-
   String _displayName = "User";
+  final AuthService _authService = AuthService(); // Inisialisasi untuk logout
 
   @override
   void initState() {
@@ -23,9 +24,18 @@ class _DashboardPageState extends State<DashboardPage> {
   void _getSavedName() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _displayName = prefs.getString('name') ?? "User";
+      // Perbaikan: Gunakan key 'name' agar sinkron dengan yang disimpan di LoginPage
+      _displayName = prefs.getString('name') ?? "User"; 
     });
   }
+
+  // Menambahkan fungsi logout agar tombol berfungsi
+  void _handleLogout() async {
+    await _authService.logout();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
+
   void _showAddToCartSheet(BuildContext context, Map<String, dynamic> item) {
     int quantity = 1;
     showModalBottomSheet(
@@ -155,7 +165,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       onPressed: () {
-                        // Perbaikan: Cek Navigator sebelum pop untuk cegah Red Screen
                         if (Navigator.canPop(context)) {
                           Navigator.pop(context);
                         }
@@ -200,15 +209,38 @@ class _DashboardPageState extends State<DashboardPage> {
       initialPage: 1000,
     );
 
+    // Data dummy menu
     final List<Map<String, dynamic>> menuItems = [
-      {'nama': 'Ketoprak', 'stok': '10', 'harga': 'Rp 15.000'},
-      {'nama': 'Gado-gado', 'stok': '5', 'harga': 'Rp 18.000'},
-      {'nama': 'Sate Ayam', 'stok': '20', 'harga': 'Rp 25.000'},
-      {'nama': 'Soto Betawi', 'stok': '8', 'harga': 'Rp 30.000'},
-      {'nama': 'Nasi Goreng', 'stok': '8', 'harga': 'Rp 30.000'},
+      {'id': 1, 'nama': 'Ketoprak', 'stok': '10', 'harga': '15000'},
+      {'id': 2, 'nama': 'Gado-gado', 'stok': '5', 'harga': '18000'},
+      {'id': 3, 'nama': 'Sate Ayam', 'stok': '20', 'harga': '25000'},
+      {'id': 4, 'nama': 'Soto Betawi', 'stok': '8', 'harga': '30000'},
+      {'id': 5, 'nama': 'Nasi Goreng', 'stok': '8', 'harga': '30000'},
     ];
 
     return Scaffold(
+      // Tambahan: AppBar dengan Tombol Logout agar User Experience lebih baik
+      appBar: AppBar(
+        title: Text('Ocon Food', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Yakin ingin keluar?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+                    TextButton(onPressed: _handleLogout, child: const Text('Keluar', style: TextStyle(color: Colors.red))),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           int gridCount;
@@ -220,10 +252,7 @@ class _DashboardPageState extends State<DashboardPage> {
             gridCount = 4;
           }
 
-          double carouselHeight = (screenSize.height * 0.25).clamp(
-            180.0,
-            300.0,
-          );
+          double carouselHeight = (screenSize.height * 0.25).clamp(180.0, 300.0);
 
           return Padding(
             padding: const EdgeInsets.all(8.0),
@@ -259,11 +288,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(15),
                             child: const Center(
-                              child: Icon(
-                                Icons.image,
-                                size: 50,
-                                color: Colors.grey,
-                              ),
+                              child: Icon(Icons.image, size: 50, color: Colors.grey),
                             ),
                           ),
                         );
@@ -321,8 +346,7 @@ class _DashboardPageState extends State<DashboardPage> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
           boxShadow: const [
-            BoxShadow(
-                color: Colors.black26, blurRadius: 5, offset: Offset(0, 2)),
+            BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 2)),
           ],
         ),
         child: Stack(
@@ -339,43 +363,25 @@ class _DashboardPageState extends State<DashboardPage> {
                         color: Colors.green,
                       ),
                       child: const Center(
-                        child: Icon(Icons.food_bank,
-                            size: 40, color: Colors.white),
+                        child: Icon(Icons.food_bank, size: 40, color: Colors.white),
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          "${item['nama']}",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    "${item['nama']}",
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                   Text(
                     "Stok: ${item['stok']}",
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
+                    style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "${item['harga']}",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber,
-                    ),
+                    "Rp ${item['harga']}",
+                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber),
                   ),
                 ],
               ),
@@ -383,35 +389,33 @@ class _DashboardPageState extends State<DashboardPage> {
             Positioned(
               top: 0,
               right: 0,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white30,
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(15),
-                    bottomLeft: Radius.circular(15),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditMenuPage(id: item['id'], nama: item['name'], price: item['harga'], stock: item['stock'], imageUrl: ''),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    onPressed: () {
+                      // Perbaikan: Konversi tipe data agar tidak terjadi TypeError di EditMenuPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditMenuPage(
+                            id: int.tryParse(item['id'].toString()) ?? 0, 
+                            nama: item['nama'] ?? '', 
+                            price: int.tryParse(item['harga'].toString()) ?? 0, 
+                            stock: int.tryParse(item['stok'].toString()) ?? 0, 
+                            imageUrl: item['image_url'] ?? 'https://via.placeholder.com/150',
                           ),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline_outlined),
-                      onPressed: () {
-                        print("Hapus ${item['nama']}");
-                      },
-                    ),
-                  ],
-                ),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_outlined, size: 20),
+                    onPressed: () {
+                      print("Hapus ${item['nama']}");
+                    },
+                  ),
+                ],
               ),
             )
           ],

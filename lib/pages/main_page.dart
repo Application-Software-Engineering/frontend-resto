@@ -3,7 +3,7 @@ import 'package:frontend_resto/pages/cart_page.dart';
 import 'package:frontend_resto/pages/dashboard.dart';
 import 'package:frontend_resto/pages/history_page.dart';
 import 'package:frontend_resto/pages/login.dart';
-import 'package:frontend_resto/service/auth_service.dart';
+import 'package:frontend_resto/services/auth_service.dart';
 import 'package:frontend_resto/pages/tambah_menu_page.dart';
 
 class MainPage extends StatefulWidget {
@@ -32,7 +32,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     const DashboardPage(),
     const TambahMenuPage(),
-    const HistoryPage(),                              // Index 2
+    const HistoryPage(),                             
   ];
 
   final List<String> _titles = [
