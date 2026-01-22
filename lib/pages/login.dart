@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/registrasi.dart';
 import 'package:frontend_resto/pages/splash.dart';
+import 'package:frontend_resto/pages/main_page.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend_resto/service/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -84,12 +85,13 @@ class _LoginPageState extends State<LoginPage> {
     }catch(e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Terjadi kesalahan. Silakan coba lagi.'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Login successful')),
       );
-    }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainPage()),
+      );
+    } 
   }
 
   @override
