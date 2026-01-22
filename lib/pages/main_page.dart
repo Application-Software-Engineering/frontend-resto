@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/cart_page.dart';
 import 'package:frontend_resto/pages/dashboard.dart';
 import 'package:frontend_resto/pages/history_page.dart';
+import 'package:frontend_resto/pages/login.dart';
+import 'package:frontend_resto/service/auth_service.dart';
 import 'package:frontend_resto/pages/tambah_menu_page.dart';
 
 class MainPage extends StatefulWidget {
@@ -12,6 +14,19 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+
+  final AuthService _authService = AuthService();
+  void _handleLogout() async {
+    await _authService.logout();
+    
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
@@ -43,6 +58,36 @@ class _MainPageState extends State<MainPage> {
         backgroundColor: const Color(0xFFFEB204),
         foregroundColor: Colors.black,
         centerTitle: false,
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            color: Colors.red,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Konfirmasi Logout'),
+                    content: const Text('Apakah Anda yakin ingin logout?'),
+                    actions: [
+                      TextButton(
+                        child: const Text('Batal'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      TextButton(
+                        onPressed: _handleLogout,
+                        child: const Text('Logout', style: TextStyle(color: Colors.red),),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
 
       body: IndexedStack(

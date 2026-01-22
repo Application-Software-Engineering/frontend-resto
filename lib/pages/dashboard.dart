@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/pages/edit_menu_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -10,6 +11,21 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+
+  String _displayName = "User";
+
+  @override
+  void initState() {
+    super.initState();
+    _getSavedName();
+  }
+
+  void _getSavedName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _displayName = prefs.getString('name') ?? "User";
+    });
+  }
   void _showAddToCartSheet(BuildContext context, Map<String, dynamic> item) {
     int quantity = 1;
     showModalBottomSheet(
@@ -192,8 +208,6 @@ class _DashboardPageState extends State<DashboardPage> {
       {'nama': 'Nasi Goreng', 'stok': '8', 'harga': 'Rp 30.000'},
     ];
 
-    final int bannerCount = menuItems.length;
-
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -221,7 +235,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     margin: const EdgeInsets.only(top: 20),
                     height: 50,
                     child: Text(
-                      'Selamat Datang! User',
+                      'Selamat Datang!, $_displayName', 
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -235,10 +249,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     height: carouselHeight,
                     child: PageView.builder(
                       controller: controller,
-                      itemBuilder: (context, index) {
-                        // Perbaikan: Tambahkan modulo agar banner berulang terus
-                        final int realIndex = index % bannerCount;
-                        
+                      itemBuilder: (context, index) {               
                         return Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(

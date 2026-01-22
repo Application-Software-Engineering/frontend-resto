@@ -6,6 +6,7 @@ import 'package:frontend_resto/pages/splash.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend_resto/service/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -50,6 +51,10 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final String token = data['token'];
+        final String userName = data['name'] ?? 'User';
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('name', userName);
 
         await AuthService().saveToken(token);
 

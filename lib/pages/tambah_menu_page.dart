@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'dashboard.dart';
 
 class TambahMenuPage extends StatefulWidget {
   const TambahMenuPage({super.key});
@@ -25,9 +26,12 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
       kIsWeb ? "http://localhost:3000" : "http://10.0.2.2:3000";
 
   final String token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJmYWl6YWxAbWFpbC5jb20iLCJpYXQiOjE3Njg4ODM2ODIsImV4cCI6MTc2ODg4NzI4Mn0.jUjBEReLt_uOWYeKhdbMgfg9j5f8l59wxY5taRq2Cdw";
+      "isi token";
 
+  
+  
   /// PICK IMAGE
+  
   Future<void> pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -43,11 +47,14 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
     }
   }
 
+  
   /// UPLOAD MENU
+
   Future<void> tambahMenu() async {
     if ((kIsWeb && webImage == null) || (!kIsWeb && imageFile == null)) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Pilih gambar dulu")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pilih gambar dulu")),
+      );
       return;
     }
 
@@ -58,7 +65,6 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
           http.MultipartRequest("POST", Uri.parse("$baseUrl/menus"));
 
       request.headers['Authorization'] = "Bearer $token";
-
       request.fields['name'] = namaController.text;
       request.fields['price'] = hargaController.text;
       request.fields['stock'] = stokController.text;
@@ -92,18 +98,27 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Menu berhasil ditambahkan")),
         );
-        Navigator.pop(context);
+
+        /// reload data k3 dashboard
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardPage()),
+          (route) => false,
+        );
       } else {
         final body = await response.stream.bytesToString();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(body)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(body)),
+        );
       }
     } finally {
       setState(() => loading = false);
     }
   }
 
-  /// PREVIEW IMAGE
+  
+  /// IMAGE PREVIEW
+  
   Widget imagePreview() {
     if (kIsWeb && webImage != null) {
       return Image.network(webImage!.path, fit: BoxFit.cover);
@@ -113,9 +128,14 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
     return const Icon(Icons.add, size: 48, color: Colors.grey);
   }
 
-  /// INPUT STYLE
-  Widget inputField(String label, TextEditingController controller,
-      {bool number = false}) {
+  
+  /// INPUT FIELD
+
+  Widget inputField(
+    String label,
+    TextEditingController controller, {
+    bool number = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -138,25 +158,34 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
     );
   }
 
+  
+  /// UI
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-  leading: IconButton(
-    icon: const Icon(Icons.arrow_back),
-    onPressed: () => Navigator.pop(context),
-  ),
-  title: const Text("Tambah Menu"),
-),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const DashboardPage()),
+              (route) => false,
+            );
+          },
+        ),
+        title: const Text("Tambah Menu"),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            inputField("Nama menu", namaController),
+            inputField("Nama Menu", namaController),
             inputField("Price", hargaController, number: true),
             inputField("Stock", stokController, number: true),
 
-            /// IMAGE PICKER WITH + ICON
+            /// IMAGE PICKER
             GestureDetector(
               onTap: pickImage,
               child: Container(
@@ -182,8 +211,11 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
                         child: CircleAvatar(
                           radius: 16,
                           backgroundColor: Colors.black54,
-                          child: const Icon(Icons.edit,
-                              size: 16, color: Colors.white),
+                          child: const Icon(
+                            Icons.edit,
+                            size: 16,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                   ],
@@ -193,12 +225,19 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
 
             const SizedBox(height: 24),
 
-            /// BUTTONS
+            /// BUTTON
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const DashboardPage()),
+                        (route) => false,
+                      );
+                    },
                     child: const Text("Cancel"),
                   ),
                 ),
