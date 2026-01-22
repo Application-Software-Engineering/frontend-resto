@@ -84,7 +84,7 @@ class _HistoryPageState extends State<HistoryPage> {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
-          color: Color(0xFFFF6B35),
+          color: Color(0xFFFEB204),
         ),
       );
     }
@@ -122,7 +122,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
     return RefreshIndicator(
       onRefresh: _loadOrders,
-      color: const Color(0xFFFF6B35),
+      color: const Color(0xFFFEB204),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _orders.length,
@@ -147,12 +147,12 @@ class _HistoryPageState extends State<HistoryPage> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35).withOpacity(0.1),
+                              color: const Color(0xFFFEB204).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(
                               Icons.receipt,
-                              color: Color(0xFFFF6B35),
+                              color: Color(0xFFFEB204),
                               size: 24,
                             ),
                           ),
@@ -214,7 +214,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          color: Color(0xFFFF6B35),
+                          color: Color(0xFFFEB204),
                         ),
                       ),
                     ],

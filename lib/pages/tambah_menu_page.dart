@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend_resto/config/api_config.dart';
 
 class TambahMenuPage extends StatefulWidget {
   const TambahMenuPage({super.key});
@@ -24,11 +25,10 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
   XFile? webImage;
   bool loading = false;
 
-  final String baseUrl = kIsWeb
-      ? "http://localhost:3000"
-      : "http://10.0.2.2:3000";
-
-  final String token = "isi token";
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
 
   /// PICK IMAGE
 
@@ -50,28 +50,29 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
   /// UPLOAD MENU
 
   Future<void> tambahMenu() async {
-    if ((kIsWeb && webImage == null) || (!kIsWeb && imageFile == null)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Pilih gambar dulu")));
-      return;
-    }
-
     setState(() => loading = true);
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('token');
+      
       if (token == null) {
         throw Exception("Kamu belum login (Token tidak ditemukan)");
       }
 
+      if ((kIsWeb && webImage == null) || (!kIsWeb && imageFile == null)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Pilih gambar dulu")),
+        );
+        setState(() => loading = false);
+        return;
+      }
+
       final request = http.MultipartRequest(
         "POST",
-        Uri.parse("$baseUrl/menus"),
+        Uri.parse("${ApiConfig.baseUrl}menus"),
       );
 
-      // Gunakan token yang didapat dari SharedPreferences
       request.headers['Authorization'] = "Bearer $token";
 
       request.fields['name'] = namaController.text;
@@ -102,26 +103,37 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
       }
 
       final response = await request.send();
+      final body = await response.stream.bytesToString();
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Menu berhasil ditambahkan")),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Menu berhasil ditambahkan")),
+          );
 
-        /// reload data k3 dashboard
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainPage()),
-          (route) => false,
-        );
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const MainPage()),
+            (route) => false,
+          );
+        }
       } else {
-        final body = await response.stream.bytesToString();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(body)));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Gagal menambahkan menu: $body")),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
       }
     } finally {
-      setState(() => loading = false);
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 

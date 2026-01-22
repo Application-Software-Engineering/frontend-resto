@@ -158,7 +158,7 @@ class _CartPageState extends State<CartPage> {
                               Text(
                                 'Subtotal: ${_formatPrice(item.subtotal)}',
                                 style: const TextStyle(
-                                  color: Color(0xFFFF6B35),
+                                  color: Color(0xFFFEB204),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -250,7 +250,7 @@ class _CartPageState extends State<CartPage> {
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFFF6B35),
+                            color: Color(0xFFFEB204),
                           ),
                         ),
                       ],
@@ -272,7 +272,7 @@ class _CartPageState extends State<CartPage> {
                           : const Icon(Icons.shopping_bag),
                       label: Text(_isLoading ? 'Memproses...' : 'Checkout'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF6B35),
+                        backgroundColor: const Color(0xFFFEB204),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         shape: RoundedRectangleBorder(
@@ -306,7 +306,7 @@ class _CartPageState extends State<CartPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-               backgroundColor: const Color(0xFFFF6B35),
+               backgroundColor: const Color(0xFFFEB204),
                foregroundColor: Colors.white,
             ),
             child: const Text('Pesan'),
