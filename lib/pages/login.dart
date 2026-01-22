@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:frontend_resto/pages/dashboard.dart';
 import 'package:frontend_resto/pages/registrasi.dart';
 import 'package:frontend_resto/pages/main_page.dart';
 import 'package:http/http.dart' as http;
@@ -101,8 +102,25 @@ class _LoginPageState extends State<LoginPage> {
           isLoading = false;
         });
        }
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', data['token']);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainPage()),
+      );
     }
-  }
+    else {
+          // Handle login failure
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login failed: ${response.body}'), backgroundColor: Colors.red,),
+          );
+        }
+      }
 
   @override
   Widget build(BuildContext context) {

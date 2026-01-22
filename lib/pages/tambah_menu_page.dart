@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:frontend_resto/pages/dashboard.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dashboard.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TambahMenuPage extends StatefulWidget {
   const TambahMenuPage({super.key});
@@ -25,9 +27,14 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
   final String baseUrl =
       kIsWeb ? "http://localhost:3000" : "http://10.0.2.2:3000";
 
+
   final String token =
       "isi token";
 
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
   
   
   /// PICK IMAGE
@@ -51,6 +58,7 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
   /// UPLOAD MENU
 
   Future<void> tambahMenu() async {
+<<<<<<< HEAD
     if ((kIsWeb && webImage == null) || (!kIsWeb && imageFile == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Pilih gambar dulu")),
@@ -116,16 +124,96 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
     }
   }
 
-  
   /// IMAGE PREVIEW
+  
+  final token = prefs.getString('token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Sesi habis silahkan login ulang')),
+    );
+    return;
+  }
+
+  if ((kIsWeb && webImage == null) || (!kIsWeb && imageFile == null)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Pilih gambar dulu")),
+    );
+    return;
+  }
+
+  setState(() => loading = true);
+
+  try {
+    final request = http.MultipartRequest(
+      "POST",
+      Uri.parse("$baseUrl/menus"),
+    );
+
+    request.headers['Authorization'] = "Bearer $token";
+
+    request.fields['name'] = namaController.text;
+    request.fields['price'] = hargaController.text;
+    request.fields['stock'] = stokController.text;
+
+    if (kIsWeb) {
+      final bytes = await webImage!.readAsBytes();
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          bytes,
+          filename: webImage!.name,
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
+    } else {
+      request.files.add(
+        await http.MultipartFile.fromPath('image', imageFile!.path),
+      );
+    }
+
+    final response = await request.send();
+    final body = await response.stream.bytesToString();
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Menu berhasil ditambahkan")),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(body)));
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error: $e")),
+    );
+  } finally {
+    setState(() => loading = false);
+  }
+}
+
+
+  /// PREVIEW IMAGE
   
   Widget imagePreview() {
     if (kIsWeb && webImage != null) {
-      return Image.network(webImage!.path, fit: BoxFit.cover);
-    } else if (!kIsWeb && imageFile != null) {
-      return Image.file(imageFile!, fit: BoxFit.cover);
-    }
-    return const Icon(Icons.add, size: 48, color: Colors.grey);
+    return FutureBuilder(
+      future: webImage!.readAsBytes(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const CircularProgressIndicator();
+        }
+        return Image.memory(
+          snapshot.data as Uint8List,
+          fit: BoxFit.cover,
+        );
+      },
+    );
+  } else if (!kIsWeb && imageFile != null) {
+    return Image.file(imageFile!, fit: BoxFit.cover);
+  }
+  return const Icon(Icons.add, size: 48, color: Colors.grey);
   }
 
   
@@ -164,6 +252,7 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -177,6 +266,8 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
         ),
         title: const Text("Tambah Menu"),
       ),
+=======
+>>>>>>> 3cc082a1aa19628a08dfa242d260f3a3a7782015
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

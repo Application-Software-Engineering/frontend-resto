@@ -248,6 +248,10 @@ class _RegistPageState extends State<RegistPage> {
                               handleRegist();
                             });
                           },
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: Size(double.infinity, 50),
+                            backgroundColor: Colors.orange,
+                          ),
                           child: Text(
                             'Registrasi',
                             style: TextStyle(
@@ -255,10 +259,6 @@ class _RegistPageState extends State<RegistPage> {
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: Size(double.infinity, 50),
-                            backgroundColor: Colors.orange,
                           ),
                         ),
                         SizedBox(height: 35),
