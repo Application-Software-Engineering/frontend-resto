@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_resto/models/menu_model.dart';
 import 'package:frontend_resto/services/menu_service.dart';
+// import 'package:frontend_resto/models/cart_model.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -21,7 +22,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _futureMenus = _menuService.getMenus();
   }
 
-  /// === BOTTOM SHEET ===
+  // ================== BOTTOM SHEET ==================
   void _showAddToCartSheet(MenuModel item) {
     int quantity = 1;
 
@@ -53,28 +54,26 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                   ),
-
                   Row(
                     children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
                         child: item.image != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: Image.network(
-                                  "$imageBaseUrl${item.image}",
-                                  fit: BoxFit.cover,
-                                ),
+                            ? Image.network(
+                                "$imageBaseUrl${item.image}",
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
                               )
-                            : const Icon(
-                                Icons.food_bank,
-                                size: 40,
-                                color: Colors.white,
+                            : Container(
+                                width: 80,
+                                height: 80,
+                                color: Colors.green,
+                                child: const Icon(
+                                  Icons.food_bank,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
                               ),
                       ),
                       const SizedBox(width: 15),
@@ -91,35 +90,23 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           Text(
                             "Rp ${item.price}",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                              fontFamily: 'Poppins',
-                            ),
+                            style: const TextStyle(color: Colors.grey),
                           ),
                           Text(
-                            "Sisa Stok: ${item.stock}",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.green,
-                            ),
+                            "Stok: ${item.stock}",
+                            style: const TextStyle(color: Colors.green),
                           ),
                         ],
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 25),
-
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
                         "Jumlah Pesanan",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Poppins',
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Row(
                         children: [
@@ -131,10 +118,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               }
                             },
                           ),
-                          Text(
-                            "$quantity",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          Text("$quantity"),
                           IconButton(
                             icon: const Icon(Icons.add),
                             onPressed: () {
@@ -145,9 +129,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 15),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -163,19 +145,14 @@ class _DashboardPageState extends State<DashboardPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              "$quantity ${item.name} ditambahkan",
-                              style: const TextStyle(fontFamily: 'Poppins'),
+                              "${item.name} ditambahkan ke keranjang",
                             ),
-                            backgroundColor: Colors.green,
                           ),
                         );
                       },
                       child: const Text(
                         "Tambah ke Keranjang",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
@@ -188,9 +165,45 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // ================== DELETE ==================
+  void _confirmDelete(MenuModel item) {
+    if (item.id == null) return;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Hapus Menu"),
+        content: Text("Yakin hapus ${item.name}?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _menuService.deleteMenu(item.id!);
+              setState(() {
+                _futureMenus = _menuService.getMenus();
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Menu berhasil dihapus"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text("Hapus"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================== UI ==================
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
     final PageController controller = PageController(
       viewportFraction: 0.8,
       initialPage: 1000,
@@ -213,27 +226,21 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
 
-          /// === CAROUSEL ===
+          // ================== CAROUSEL ==================
           SizedBox(
-            height: (screenSize.height * 0.25).clamp(180, 300),
+            height: 220,
             child: FutureBuilder<List<MenuModel>>(
               future: _futureMenus,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final menus = snapshot.data ?? [];
-
-                if (menus.isEmpty) {
-                  return const Center(child: Text("Belum ada menu"));
-                }
-
+                final menus = snapshot.data!;
                 return PageView.builder(
                   controller: controller,
-                  itemCount: menus.length,
                   itemBuilder: (_, index) {
-                    final item = menus[index];
+                    final item = menus[index % menus.length];
 
                     return Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -259,16 +266,15 @@ class _DashboardPageState extends State<DashboardPage> {
 
           const SizedBox(height: 20),
 
-          /// === MENU GRID ===
+          // ================== GRID MENU ==================
           FutureBuilder<List<MenuModel>>(
             future: _futureMenus,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+              if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final menus = snapshot.data ?? [];
-
+              final menus = snapshot.data!;
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -294,6 +300,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // ================== MENU CARD ==================
   Widget _menuCard(MenuModel item) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -302,40 +309,70 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 5)],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: item.image != null
+                      ? Image.network(
+                          "$imageBaseUrl${item.image}",
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        )
+                      : Container(
+                          color: Colors.green,
+                          child: const Icon(
+                            Icons.food_bank,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                        ),
+                ),
               ),
-              child: item.image != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        "$imageBaseUrl${item.image}",
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : const Icon(Icons.food_bank, size: 40, color: Colors.white),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                item.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text("Stok: ${item.stock}", style: const TextStyle(fontSize: 11)),
+              Text(
+                "Rp ${item.price}",
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            item.name,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-            ),
-          ),
-          Text("Stok: ${item.stock}", style: const TextStyle(fontSize: 11)),
-          Text(
-            "Rp ${item.price}",
-            style: const TextStyle(
-              color: Colors.amber,
-              fontWeight: FontWeight.bold,
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white70,
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(15),
+                  bottomLeft: Radius.circular(15),
+                ),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 18),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                    onPressed: () => _confirmDelete(item),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
